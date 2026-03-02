@@ -1,6 +1,9 @@
 package store
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestSeedPresetsAndGetEnabled(t *testing.T) {
 	t.Parallel()
@@ -102,7 +105,7 @@ func TestLogGuardrailAction(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	entries, err := st.GetGuardrailLog("datetime('2000-01-01')", 10)
+	entries, err := st.GetGuardrailLog(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), 10)
 	if err != nil {
 		t.Fatal(err)
 	}

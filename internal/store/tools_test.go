@@ -1,6 +1,9 @@
 package store
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestEnsureSessionAndRecordToolUse(t *testing.T) {
 	t.Parallel()
@@ -25,7 +28,7 @@ func TestEnsureSessionAndRecordToolUse(t *testing.T) {
 	}
 
 	// Check tool stats.
-	stats, err := st.GetToolStats("/tmp/project", "datetime('2000-01-01')")
+	stats, err := st.GetToolStats("/tmp/project", time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +72,7 @@ func TestSessionSummary(t *testing.T) {
 	_ = st.RecordToolUse("s1", "Edit", true)
 	_ = st.RecordToolUse("s1", "Bash", true)
 
-	summary, err := st.GetSessionSummary("/tmp/project", "datetime('2000-01-01')")
+	summary, err := st.GetSessionSummary("/tmp/project", time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC))
 	if err != nil {
 		t.Fatal(err)
 	}

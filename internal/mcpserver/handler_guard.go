@@ -2,7 +2,6 @@ package mcpserver
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"regexp"
 
@@ -138,18 +137,6 @@ func guardTest(req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return mcp.NewToolResultError(fmt.Sprintf("invalid regex: %v", err)), nil
 	}
 
-	// Build a fake tool input for context.
-	var input json.RawMessage
-	switch toolName {
-	case "Bash":
-		input, _ = json.Marshal(map[string]string{"command": testInput})
-	case "Write", "Edit":
-		input, _ = json.Marshal(map[string]string{"file_path": testInput})
-	default:
-		input = json.RawMessage(`"` + testInput + `"`)
-	}
-	_ = input
-
 	match := re.FindString(testInput)
 	result := map[string]any{
 		"pattern":    pattern,
@@ -166,9 +153,9 @@ func guardTest(req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 
 func guardLog(st *store.Store, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	period := req.GetString("period", "week")
-	sinceSQL := analytics.PeriodToSQL(period)
+	since := analytics.PeriodToTime(period)
 
-	entries, err := st.GetGuardrailLog(sinceSQL, 50)
+	entries, err := st.GetGuardrailLog(since, 50)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}

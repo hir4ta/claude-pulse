@@ -55,7 +55,7 @@ func (s *Store) VectorSearch(queryVec []float32, source string, limit int) ([]Ve
 		var sourceID int64
 		var blob []byte
 		if err := rows.Scan(&sourceID, &blob); err != nil {
-			continue
+			return nil, fmt.Errorf("store: scan vector: %w", err)
 		}
 		vec := deserializeFloat32(blob)
 		sim := cosineSimilarity(queryVec, vec)
@@ -63,6 +63,9 @@ func (s *Store) VectorSearch(queryVec []float32, source string, limit int) ([]Ve
 			continue
 		}
 		candidates = append(candidates, VectorMatch{SourceID: sourceID, Score: sim})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: iterate vectors: %w", err)
 	}
 
 	sort.Slice(candidates, func(i, j int) bool {

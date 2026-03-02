@@ -120,10 +120,13 @@ func (s *Store) GetDocsByIDs(ids []int64) ([]DocRow, error) {
 		var version sql.NullString
 		if err := rows.Scan(&d.ID, &d.URL, &d.SectionPath, &d.Content, &d.ContentHash,
 			&d.SourceType, &version, &d.CrawledAt, &d.TTLDays); err != nil {
-			continue
+			return nil, fmt.Errorf("store: scan docs by ids: %w", err)
 		}
 		d.Version = version.String
 		docs = append(docs, d)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: iterate docs by ids: %w", err)
 	}
 	return docs, nil
 }
@@ -220,10 +223,13 @@ func (s *Store) matchDocsFTS(query string, sourceType string, limit int) ([]DocR
 		var version sql.NullString
 		if err := rows.Scan(&d.ID, &d.URL, &d.SectionPath, &d.Content, &d.ContentHash,
 			&d.SourceType, &version, &d.CrawledAt, &d.TTLDays); err != nil {
-			continue
+			return nil, fmt.Errorf("store: scan fts result: %w", err)
 		}
 		d.Version = version.String
 		docs = append(docs, d)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: iterate fts results: %w", err)
 	}
 	return docs, nil
 }

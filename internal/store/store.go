@@ -11,6 +11,9 @@ import (
 	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
+// sqliteDatetime is the time format used by SQLite's datetime() function.
+const sqliteDatetime = "2006-01-02 15:04:05"
+
 // Store wraps a SQLite database connection.
 type Store struct {
 	db     *sql.DB

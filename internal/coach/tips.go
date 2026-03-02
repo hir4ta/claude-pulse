@@ -2,6 +2,7 @@ package coach
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hir4ta/claude-pulse/internal/store"
 )
@@ -16,19 +17,19 @@ type Tip struct {
 // GenerateTips analyzes usage data and returns personalized tips.
 // This is entirely rule-based (no LLM needed).
 func GenerateTips(st *store.Store, projectPath string) ([]Tip, error) {
-	sinceSQL := "datetime('now', '-7 days')"
+	since := time.Now().UTC().Add(-7 * 24 * time.Hour)
 
-	tools, err := st.GetToolStats(projectPath, sinceSQL)
+	tools, err := st.GetToolStats(projectPath, since)
 	if err != nil {
 		return nil, fmt.Errorf("coach: get tool stats: %w", err)
 	}
 
-	sessions, err := st.GetSessionSummary(projectPath, sinceSQL)
+	sessions, err := st.GetSessionSummary(projectPath, since)
 	if err != nil {
 		return nil, fmt.Errorf("coach: get session summary: %w", err)
 	}
 
-	guardrails, err := st.GetGuardrailStats(sinceSQL)
+	guardrails, err := st.GetGuardrailStats(since)
 	if err != nil {
 		guardrails = nil
 	}

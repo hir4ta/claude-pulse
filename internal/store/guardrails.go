@@ -37,9 +37,12 @@ func (s *Store) GetEnabledRules() ([]GuardrailRule, error) {
 		var r GuardrailRule
 		if err := rows.Scan(&r.ID, &r.Name, &r.ToolName, &r.Pattern, &r.Action,
 			&r.Severity, &r.Message, &r.Enabled, &r.IsPreset); err != nil {
-			continue
+			return nil, fmt.Errorf("store: scan enabled rule: %w", err)
 		}
 		rules = append(rules, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: iterate enabled rules: %w", err)
 	}
 	return rules, nil
 }
@@ -60,9 +63,12 @@ func (s *Store) GetAllRules() ([]GuardrailRule, error) {
 		var r GuardrailRule
 		if err := rows.Scan(&r.ID, &r.Name, &r.ToolName, &r.Pattern, &r.Action,
 			&r.Severity, &r.Message, &r.Enabled, &r.IsPreset); err != nil {
-			continue
+			return nil, fmt.Errorf("store: scan rule: %w", err)
 		}
 		rules = append(rules, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: iterate all rules: %w", err)
 	}
 	return rules, nil
 }
@@ -149,7 +155,7 @@ type GuardrailLogEntry struct {
 }
 
 // GetGuardrailLog returns recent guardrail actions.
-func (s *Store) GetGuardrailLog(sinceSQL string, limit int) ([]GuardrailLogEntry, error) {
+func (s *Store) GetGuardrailLog(since time.Time, limit int) ([]GuardrailLogEntry, error) {
 	if limit <= 0 {
 		limit = 20
 	}
@@ -157,9 +163,9 @@ func (s *Store) GetGuardrailLog(sinceSQL string, limit int) ([]GuardrailLogEntry
 		SELECT gl.id, gr.name, gl.tool_name, gl.action, gl.matched, gl.timestamp
 		FROM guardrail_log gl
 		JOIN guardrail_rules gr ON gr.id = gl.rule_id
-		WHERE gl.timestamp >= `+sinceSQL+`
+		WHERE gl.timestamp >= ?
 		ORDER BY gl.timestamp DESC
-		LIMIT ?`, limit)
+		LIMIT ?`, formatSince(since), limit)
 	if err != nil {
 		return nil, fmt.Errorf("store: get guardrail log: %w", err)
 	}
@@ -169,9 +175,12 @@ func (s *Store) GetGuardrailLog(sinceSQL string, limit int) ([]GuardrailLogEntry
 	for rows.Next() {
 		var e GuardrailLogEntry
 		if err := rows.Scan(&e.ID, &e.RuleName, &e.ToolName, &e.Action, &e.Matched, &e.Timestamp); err != nil {
-			continue
+			return nil, fmt.Errorf("store: scan guardrail log: %w", err)
 		}
 		entries = append(entries, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: iterate guardrail log: %w", err)
 	}
 	return entries, nil
 }
@@ -184,14 +193,14 @@ type GuardrailStat struct {
 }
 
 // GetGuardrailStats returns aggregated guardrail action counts for a period.
-func (s *Store) GetGuardrailStats(sinceSQL string) ([]GuardrailStat, error) {
+func (s *Store) GetGuardrailStats(since time.Time) ([]GuardrailStat, error) {
 	rows, err := s.db.Query(`
 		SELECT gr.name, gl.action, COUNT(*)
 		FROM guardrail_log gl
 		JOIN guardrail_rules gr ON gr.id = gl.rule_id
-		WHERE gl.timestamp >= `+sinceSQL+`
+		WHERE gl.timestamp >= ?
 		GROUP BY gr.name, gl.action
-		ORDER BY COUNT(*) DESC`, )
+		ORDER BY COUNT(*) DESC`, formatSince(since))
 	if err != nil {
 		return nil, fmt.Errorf("store: get guardrail stats: %w", err)
 	}
@@ -201,9 +210,12 @@ func (s *Store) GetGuardrailStats(sinceSQL string) ([]GuardrailStat, error) {
 	for rows.Next() {
 		var gs GuardrailStat
 		if err := rows.Scan(&gs.RuleName, &gs.Action, &gs.Count); err != nil {
-			continue
+			return nil, fmt.Errorf("store: scan guardrail stats: %w", err)
 		}
 		stats = append(stats, gs)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: iterate guardrail stats: %w", err)
 	}
 	return stats, nil
 }

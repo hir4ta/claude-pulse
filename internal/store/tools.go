@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+// formatSince converts a time.Time to the SQLite datetime format for query binding.
+func formatSince(since time.Time) string {
+	return since.UTC().Format(sqliteDatetime)
+}
+
 // EnsureSession creates a session row if it doesn't already exist.
 func (s *Store) EnsureSession(sessionID, projectPath string) error {
 	_, err := s.db.Exec(`
@@ -32,7 +37,7 @@ func (s *Store) EndSession(sessionID string) error {
 }
 
 // RecordToolUse increments success or failure count for a tool in a session.
-// Also increments the session-level counters.
+// Both the tool_stats upsert and session counter update run in a single transaction.
 func (s *Store) RecordToolUse(sessionID, toolName string, success bool) error {
 	now := time.Now().UTC().Format(time.RFC3339)
 
@@ -44,7 +49,13 @@ func (s *Store) RecordToolUse(sessionID, toolName string, success bool) error {
 		failureInc = 1
 	}
 
-	_, err := s.db.Exec(`
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("store: begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec(`
 		INSERT INTO tool_stats (session_id, tool_name, success, failure, last_used)
 		VALUES (?, ?, ?, ?, ?)
 		ON CONFLICT(session_id, tool_name) DO UPDATE SET
@@ -57,8 +68,7 @@ func (s *Store) RecordToolUse(sessionID, toolName string, success bool) error {
 		return fmt.Errorf("store: record tool use: %w", err)
 	}
 
-	// Update session-level counters.
-	_, err = s.db.Exec(`
+	_, err = tx.Exec(`
 		UPDATE sessions SET
 			tool_use_count = tool_use_count + 1,
 			tool_fail_count = tool_fail_count + ?
@@ -68,7 +78,8 @@ func (s *Store) RecordToolUse(sessionID, toolName string, success bool) error {
 	if err != nil {
 		return fmt.Errorf("store: update session counters: %w", err)
 	}
-	return nil
+
+	return tx.Commit()
 }
 
 // ToolStat represents aggregated tool usage statistics.
@@ -82,8 +93,8 @@ type ToolStat struct {
 
 // GetToolStats returns aggregated tool statistics for a project within a time range.
 // If projectPath is empty, returns stats across all projects.
-// sinceSQL is a datetime string (e.g. datetime('now', '-7 days')).
-func (s *Store) GetToolStats(projectPath string, sinceSQL string) ([]ToolStat, error) {
+func (s *Store) GetToolStats(projectPath string, since time.Time) ([]ToolStat, error) {
+	sinceStr := formatSince(since)
 	var query string
 	var args []any
 
@@ -94,10 +105,10 @@ func (s *Store) GetToolStats(projectPath string, sinceSQL string) ([]ToolStat, e
 			       SUM(ts.failure) as total_failure
 			FROM tool_stats ts
 			JOIN sessions s ON s.id = ts.session_id
-			WHERE s.project_path = ? AND s.started_at >= ` + sinceSQL + `
+			WHERE s.project_path = ? AND s.started_at >= ?
 			GROUP BY ts.tool_name
 			ORDER BY (SUM(ts.success) + SUM(ts.failure)) DESC`
-		args = []any{projectPath}
+		args = []any{projectPath, sinceStr}
 	} else {
 		query = `
 			SELECT ts.tool_name,
@@ -105,9 +116,10 @@ func (s *Store) GetToolStats(projectPath string, sinceSQL string) ([]ToolStat, e
 			       SUM(ts.failure) as total_failure
 			FROM tool_stats ts
 			JOIN sessions s ON s.id = ts.session_id
-			WHERE s.started_at >= ` + sinceSQL + `
+			WHERE s.started_at >= ?
 			GROUP BY ts.tool_name
 			ORDER BY (SUM(ts.success) + SUM(ts.failure)) DESC`
+		args = []any{sinceStr}
 	}
 
 	rows, err := s.db.Query(query, args...)
@@ -120,13 +132,16 @@ func (s *Store) GetToolStats(projectPath string, sinceSQL string) ([]ToolStat, e
 	for rows.Next() {
 		var ts ToolStat
 		if err := rows.Scan(&ts.ToolName, &ts.Successes, &ts.Failures); err != nil {
-			continue
+			return nil, fmt.Errorf("store: scan tool stats: %w", err)
 		}
 		ts.TotalUses = ts.Successes + ts.Failures
 		if ts.TotalUses > 0 {
 			ts.SuccessRate = float64(ts.Successes) / float64(ts.TotalUses)
 		}
 		stats = append(stats, ts)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: iterate tool stats: %w", err)
 	}
 	return stats, nil
 }
@@ -138,7 +153,8 @@ type SessionSummary struct {
 }
 
 // GetSessionSummary returns session count and average tool usage for a period.
-func (s *Store) GetSessionSummary(projectPath string, sinceSQL string) (*SessionSummary, error) {
+func (s *Store) GetSessionSummary(projectPath string, since time.Time) (*SessionSummary, error) {
+	sinceStr := formatSince(since)
 	var query string
 	var args []any
 
@@ -146,13 +162,14 @@ func (s *Store) GetSessionSummary(projectPath string, sinceSQL string) (*Session
 		query = `
 			SELECT COUNT(*), COALESCE(AVG(tool_use_count), 0)
 			FROM sessions
-			WHERE project_path = ? AND started_at >= ` + sinceSQL
-		args = []any{projectPath}
+			WHERE project_path = ? AND started_at >= ?`
+		args = []any{projectPath, sinceStr}
 	} else {
 		query = `
 			SELECT COUNT(*), COALESCE(AVG(tool_use_count), 0)
 			FROM sessions
-			WHERE started_at >= ` + sinceSQL
+			WHERE started_at >= ?`
+		args = []any{sinceStr}
 	}
 
 	var summary SessionSummary

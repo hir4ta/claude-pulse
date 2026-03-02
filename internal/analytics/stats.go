@@ -3,6 +3,7 @@ package analytics
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/hir4ta/claude-pulse/internal/store"
 )
@@ -28,32 +29,33 @@ type GuardrailSection struct {
 	ByRule       []store.GuardrailStat `json:"by_rule,omitempty"`
 }
 
-// PeriodToSQL converts a period name to a SQL datetime expression.
-func PeriodToSQL(period string) string {
+// PeriodToTime converts a period name to a Go time.Time cutoff.
+func PeriodToTime(period string) time.Time {
+	now := time.Now().UTC()
 	switch period {
 	case "today":
-		return "datetime('now', '-1 day')"
+		return now.Add(-24 * time.Hour)
 	case "week":
-		return "datetime('now', '-7 days')"
+		return now.Add(-7 * 24 * time.Hour)
 	case "month":
-		return "datetime('now', '-30 days')"
+		return now.Add(-30 * 24 * time.Hour)
 	case "all":
-		return "datetime('2000-01-01')"
+		return time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 	default:
-		return "datetime('now', '-7 days')"
+		return now.Add(-7 * 24 * time.Hour)
 	}
 }
 
 // GenerateDashboard builds the stats dashboard for a given period and project.
 func GenerateDashboard(st *store.Store, period, projectPath string) (*Dashboard, error) {
-	sinceSQL := PeriodToSQL(period)
+	since := PeriodToTime(period)
 
-	sessions, err := st.GetSessionSummary(projectPath, sinceSQL)
+	sessions, err := st.GetSessionSummary(projectPath, since)
 	if err != nil {
 		return nil, fmt.Errorf("analytics: session summary: %w", err)
 	}
 
-	tools, err := st.GetToolStats(projectPath, sinceSQL)
+	tools, err := st.GetToolStats(projectPath, since)
 	if err != nil {
 		return nil, fmt.Errorf("analytics: tool stats: %w", err)
 	}
@@ -72,7 +74,7 @@ func GenerateDashboard(st *store.Store, period, projectPath string) (*Dashboard,
 		mostUsed = mostUsed[:10]
 	}
 
-	gStats, err := st.GetGuardrailStats(sinceSQL)
+	gStats, err := st.GetGuardrailStats(since)
 	if err != nil {
 		gStats = nil // non-fatal
 	}
