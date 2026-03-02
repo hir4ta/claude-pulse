@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "pulse": {
+      "command": "pulse",
+      "args": ["serve"],
+      "env": {}
+    }
+  }
+}

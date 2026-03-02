@@ -1,0 +1,39 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "pulse hook SessionStart",
+        "timeout": 3000
+      }
+    ],
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "pulse hook PreToolUse",
+        "timeout": 3000
+      }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "pulse hook PostToolUse",
+        "timeout": 3000
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "type": "command",
+        "command": "pulse hook PostToolUseFailure",
+        "timeout": 3000
+      }
+    ],
+    "SessionEnd": [
+      {
+        "type": "command",
+        "command": "pulse hook SessionEnd",
+        "timeout": 3000
+      }
+    ]
+  }
+}

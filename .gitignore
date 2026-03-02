@@ -1,0 +1,7 @@
+pulse
+*.exe
+.DS_Store
+dist/
+*.db
+CLAUDE.md
+.claude/
