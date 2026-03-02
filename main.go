@@ -36,8 +36,6 @@ func run() error {
 			return fmt.Errorf("usage: pulse hook <EventName>")
 		}
 		return runHook(os.Args[2])
-	case "seed-presets":
-		return runSeedPresets()
 	case "version", "--version", "-v":
 		fmt.Printf("pulse %s\n", version)
 		return nil
@@ -69,16 +67,6 @@ func runServe() error {
 	return server.ServeStdio(s)
 }
 
-func runSeedPresets() error {
-	st, err := store.OpenDefault()
-	if err != nil {
-		return fmt.Errorf("failed to open store: %w", err)
-	}
-	defer st.Close()
-
-	return st.SeedPresets(guard.DefaultPresets())
-}
-
 func printUsage() {
 	fmt.Println(`pulse - Your development health companion for Claude Code
 
@@ -88,7 +76,6 @@ Usage:
 Commands:
   serve          Run as MCP server (stdio) for Claude Code integration
   hook <Event>   Handle hook events (called by Claude Code)
-  seed-presets   Seed default guardrail presets into database
   version        Show version
   help           Show this help
 

@@ -27,11 +27,7 @@ go install github.com/hir4ta/claude-pulse@latest
 バイナリは `$GOPATH/bin/pulse` にインストールされます。
 `$GOPATH/bin` が PATH に含まれていることを確認してください。
 
-初回セットアップ:
-
-```bash
-pulse seed-presets    # デフォルト guardrail プリセットを投入
-```
+Guardrail プリセットは MCP サーバー起動時に自動 seed されます。
 
 **API key** (optional):
 
@@ -104,7 +100,6 @@ Set `PULSE_DEBUG=1` to enable debug logging to `~/.claude-pulse/debug.log`.
 git clone https://github.com/hir4ta/claude-pulse
 cd claude-pulse
 go build -o pulse .
-./pulse seed-presets
 ```
 
 ## Dependencies
