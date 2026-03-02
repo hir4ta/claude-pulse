@@ -1,6 +1,6 @@
 {
   "name": "pulse",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Your development health companion for Claude Code — Analytics, Guardrails, Coaching",
   "author": "hir4ta",
   "repository": "https://github.com/hir4ta/claude-pulse"
