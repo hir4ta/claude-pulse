@@ -1,0 +1,17 @@
+{
+  "name": "claude-pulse",
+  "owner": {
+    "name": "hir4ta"
+  },
+  "metadata": {
+    "description": "Your development health companion for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "pulse",
+      "source": "./plugin",
+      "description": "Analytics, Guardrails, Coaching — development health companion",
+      "version": "0.1.1"
+    }
+  ]
+}

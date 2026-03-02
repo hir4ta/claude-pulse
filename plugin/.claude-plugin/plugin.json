@@ -1,0 +1,17 @@
+{
+  "author": {
+    "name": "hir4ta"
+  },
+  "description": "Your development health companion for Claude Code — Analytics, Guardrails, Coaching",
+  "homepage": "https://github.com/hir4ta/claude-pulse",
+  "keywords": [
+    "analytics",
+    "guardrails",
+    "coaching",
+    "health"
+  ],
+  "license": "MIT",
+  "name": "pulse",
+  "repository": "https://github.com/hir4ta/claude-pulse",
+  "version": "dev"
+}

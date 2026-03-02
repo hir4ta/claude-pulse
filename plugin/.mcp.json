@@ -1,9 +1,8 @@
 {
   "mcpServers": {
     "pulse": {
-      "command": "pulse",
-      "args": ["serve"],
-      "env": {}
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/run.sh",
+      "args": ["serve"]
     }
   }
 }

@@ -2,37 +2,57 @@
   "hooks": {
     "SessionStart": [
       {
-        "type": "command",
-        "command": "pulse hook SessionStart",
-        "timeout": 3000
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/run.sh\" hook SessionStart",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PreToolUse": [
       {
-        "type": "command",
-        "command": "pulse hook PreToolUse",
-        "timeout": 3000
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/run.sh\" hook PreToolUse",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
-        "type": "command",
-        "command": "pulse hook PostToolUse",
-        "timeout": 3000
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/run.sh\" hook PostToolUse",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
       {
-        "type": "command",
-        "command": "pulse hook PostToolUseFailure",
-        "timeout": 3000
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/run.sh\" hook PostToolUseFailure",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "SessionEnd": [
       {
-        "type": "command",
-        "command": "pulse hook SessionEnd",
-        "timeout": 3000
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/run.sh\" hook SessionEnd",
+            "timeout": 3
+          }
+        ]
       }
     ]
   }
