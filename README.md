@@ -21,10 +21,17 @@ actual usage data, plus searchable best practices.
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/hir4ta/claude-pulse/main/install.sh | sh
+go install github.com/hir4ta/claude-pulse@latest
 ```
 
-Restart Claude Code after installation.
+バイナリは `$GOPATH/bin/pulse` にインストールされます。
+`$GOPATH/bin` が PATH に含まれていることを確認してください。
+
+初回セットアップ:
+
+```bash
+pulse seed-presets    # デフォルト guardrail プリセットを投入
+```
 
 **API key** (optional):
 

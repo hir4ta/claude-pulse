@@ -469,9 +469,7 @@ Usage:
 Commands:
   serve          MCP サーバー起動（stdio）
   hook <Event>   Hook ハンドラ（Claude Code から呼ばれる）
-  install        セットアップ（hooks + MCP + DB）
-  uninstall      完全削除
-  plugin-bundle  plugin/ ディレクトリ再生成
+  seed-presets   デフォルト guardrail プリセットを DB に投入
   version        バージョン表示
   help           ヘルプ
 
